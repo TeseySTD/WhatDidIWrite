@@ -1,3 +1,76 @@
 ﻿@page "/"
 @page "/commit"
-<h3>Commit</h3>
+@using Wdiw.Infrastructure.Abstractions
+@using Wdiw.Infrastructure.Models
+@inject IGitService GitService
+
+@if (_isLoading)
+{
+    <Markup Foreground="Color.Yellow" Content="Analyzing git repository..."/>
+}
+else if (!_isGitRepo)
+{
+    <Markup Foreground="Color.Red" Content="Error: There is no git repo here."/>
+}
+else if (_diff is null || _diff.IsEmpty)
+{
+    <Markup Content="No staged changes found. Use 'git add' first."/>
+}
+else
+{
+    <Rows>
+        <Markup Content="Raw summary:"/>
+        <Markup Content="@_diff.RawSummary"/>
+        <Markup Content="@($"Total insertions: {_diff.TotalInsertions}")"/>
+        <Markup Content="@($"Total deletions: {_diff.TotalDeletions}")"/>
+        <Markup Content="File changes:"/>
+        @foreach (var change in _diff.Files)
+        {
+            <Newline/>
+            
+            <Markup Foreground="GetStatusColor(change.Status)"
+                    Content="@($" - {change.Status} {change.Path} (+{change.LinesAdded} -{change.LinesDeleted})")"/>
+            <Markup Foreground="GetStatusColor(change.Status)"
+                    Content="@change.Content"/>
+        }
+    </Rows>
+}
+
+@code {
+    private bool _isGitRepo;
+    private bool _isLoading = true;
+    private DiffResult? _diff;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        _isGitRepo = await GitService.IsGitRepositoryAsync();
+        if (_isGitRepo)
+        {
+            _diff = await GitService.GetStagedChangesAsync();
+        }
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private Color GetStatusColor(FileChangeStatus status) => status switch
+    {
+        FileChangeStatus.Added => Color.Green,
+        FileChangeStatus.Modified => Color.BlueViolet,
+        FileChangeStatus.Deleted => Color.Red,
+        FileChangeStatus.Changed => Color.Blue,
+        _ => Color.White
+    };
+
+}
