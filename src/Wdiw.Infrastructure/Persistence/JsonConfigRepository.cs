@@ -21,38 +21,45 @@ public class JsonConfigRepository : IConfigRepository
         }
     }
 
-    public UserSettings GetSettings()
+    public AppSettings GetSettings()
     {
         if (!File.Exists(_configPath))
-            throw new FileNotFoundException("The user config file was not found.", _configPath);
+        {
+            var defaultSettings = AppSettings.Default;
+            SaveSettings(defaultSettings);
+            return defaultSettings;
+        }
 
         try
         {
             var json = File.ReadAllText(_configPath);
-            return JsonSerializer.Deserialize(json, ConfigJsonContext.Default.UserSettings)
-                   ?? throw new Exception("Failed to deserialize user settings");
+            return JsonSerializer.Deserialize(json, ConfigJsonContext.Default.AppSettings)
+                   ?? AppSettings.Default;
         }
-        catch (Exception ex)
+        catch
         {
-            throw new InvalidOperationException($"Invalid configuration at {_configPath}: {ex.Message}");
+            return AppSettings.Default;
         }
     }
 
-    public void SaveSettings(UserSettings settings)
+    public void SaveSettings(AppSettings settings)
     {
-        var json = JsonSerializer.Serialize(settings, ConfigJsonContext.Default.UserSettings);
+        var json = JsonSerializer.Serialize(settings, ConfigJsonContext.Default.AppSettings);
         File.WriteAllText(_configPath, json);
     }
-
 }
 
 [JsonSourceGenerationOptions(
     WriteIndented = true,
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    Converters = [typeof(JsonStringEnumConverter<AiProvider>)] 
 )]
-[JsonSerializable(typeof(UserSettings))]
-[JsonConverter(typeof(JsonStringEnumConverter<AiProvider>))]
+
+[JsonSerializable(typeof(AppSettings))]
+[JsonSerializable(typeof(AiSettings))]
+[JsonSerializable(typeof(CommitSettings))]
+[JsonSerializable(typeof(AiProvider))]
 internal partial class ConfigJsonContext : JsonSerializerContext
 {
 }

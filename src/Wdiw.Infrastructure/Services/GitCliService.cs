@@ -58,14 +58,17 @@ public class GitCliService : IGitService
     private Dictionary<string, string> ParseBulkDiff(string fullDiff)
     {
         var map = new Dictionary<string, string>();
-        var parts = fullDiff.Split(new[] { "diff --git " }, StringSplitOptions.RemoveEmptyEntries);
+        if (string.IsNullOrWhiteSpace(fullDiff)) return map;
+
+        var parts = fullDiff.Split(["diff --git "], StringSplitOptions.RemoveEmptyEntries);
 
         foreach (var part in parts)
         {
             var fullPart = "diff --git " + part;
-            var lines = fullPart.Split(['\n', '\r'], 2);
-            var header = lines[0];
+            var lines = fullPart.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length == 0) continue;
 
+            var header = lines[0];
             int bStart = header.LastIndexOf(" b/", StringComparison.Ordinal);
             if (bStart == -1) continue;
 

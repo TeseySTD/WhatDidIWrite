@@ -4,6 +4,6 @@ namespace Wdiw.Infrastructure.Abstractions;
 
 public interface IConfigRepository
 {
-   UserSettings GetSettings();
-   void SaveSettings(UserSettings settings);
+   AppSettings GetSettings();
+   void SaveSettings(AppSettings settings);
 }

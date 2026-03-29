@@ -22,24 +22,24 @@ public static class DependencyInjection
         {
             var config = sp.GetRequiredService<IConfigRepository>().GetSettings();
 
-            IChatClient client = config.Provider switch
+            IChatClient client = config.Ai.Provider switch
             {
-                AiProvider.OpenAi => new OpenAIClient(config.ApiKey)
-                    .GetChatClient(config.ModelId ?? config.DefaultAiModel).AsIChatClient(),
+                AiProvider.OpenAi => new OpenAIClient(config.Ai.ApiKey)
+                    .GetChatClient(config.Ai.GetActiveModel()).AsIChatClient(),
 
                 AiProvider.Gemini => new GeminiChatClient(
-                    apiKey: config.ApiKey,
-                    model: config.ModelId ?? config.DefaultAiModel),
+                    apiKey: config.Ai.ApiKey,
+                    model: config.Ai.GetActiveModel()),
 
-                AiProvider.Claude => new AnthropicClient(new Anthropic.Core.ClientOptions { ApiKey = config.ApiKey })
-                    .AsIChatClient(config.ModelId ?? config.DefaultAiModel),
+                AiProvider.Claude => new AnthropicClient(new Anthropic.Core.ClientOptions { ApiKey = config.Ai.ApiKey })
+                    .AsIChatClient(config.Ai.GetActiveModel()),
 
                 AiProvider.Ollama => new OllamaApiClient(
-                    uri: new Uri(config.OllamaEndpoint ?? config.DefaultOllamaEndpoint),
-                    defaultModel: config.ModelId ?? config.DefaultAiModel
+                    uri: new Uri(config.Ai.GetActiveEndpoint()),
+                    defaultModel: config.Ai.GetActiveModel()
                 ),
 
-                _ => throw new NotSupportedException($"Provider {config.Provider} is not supported.")
+                _ => throw new NotSupportedException($"Provider {config.Ai.Provider} is not supported.")
             };
 
             return client
