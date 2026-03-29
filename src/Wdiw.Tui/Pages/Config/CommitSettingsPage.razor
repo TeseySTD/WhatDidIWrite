@@ -1,0 +1,112 @@
+﻿@page "/config"
+@page "/config/commit"
+@layout ConfigLayout
+@using Wdiw.Infrastructure.Abstractions
+@using Wdiw.Infrastructure.Models
+@using Wdiw.Tui.Layouts.Config
+@using Wdiw.Tui.Components.UI
+
+<Rows>
+    <Markup Content="--- Commit Message Behavior ---" Foreground="Color.Grey37"/>
+    <Newline/>
+
+    <Columns Expand>
+        <Rows>
+            <Markup Content="Use Semantic Commits:" Foreground="Color.IndianRed"/>
+            <Select TItem="bool"
+                    Options="@(new[] { true, false })"
+                    Value="@_settings.Commit.UseSemantic"
+                    ValueChanged="@(v => UpdateCommit(_settings.Commit with { UseSemantic = v }))"
+                    OptionForeground="Color.Grey"
+                    SelectedOptionForeground="Color.Red3"/>
+        </Rows>
+        <Rows>
+            <Markup Content="Push after commit:" Foreground="Color.IndianRed"/>
+            <Select TItem="bool"
+                    Options="@(new[] { true, false })"
+                    Value="@_settings.Commit.PushAfterCommit"
+                    ValueChanged="@(v => UpdateCommit(_settings.Commit with { PushAfterCommit = v }))"
+                    OptionForeground="Color.Grey"
+                    SelectedOptionForeground="Color.Red3"/>
+        </Rows>
+    </Columns>
+
+    <Newline/>
+
+    <ValidatedInput Label="Output Language"
+                    Value="@_settings.Commit.Language"
+                    ValueChanged="@(v => UpdateCommit(_settings.Commit with { Language = v }))"
+                    Placeholder="en, uk, etc."/>
+
+    <ValidatedInput Label="Max Diff Lines"
+                    Value="@_settings.Commit.MaxDiffLines.ToString()"
+                    ValueChanged="OnMaxLinesChanged"
+                    Placeholder="500"
+                    ErrorMessage="@_maxLinesError"/>
+
+    <Align Horizontal="HorizontalAlignment.Right">
+        <WButton Content="Save Configuration"
+                    OnClick="Save"
+                    BackgroundColor="Color.Red"
+                    FocusedColor="Color.Maroon"/>
+    </Align>
+    <Toast @ref="_toast"/>
+</Rows>
+
+@code {
+    [Inject] public required IConfigRepository ConfigRepository { get; init; }
+    private AppSettings _settings = AppSettings.Default;
+    private string? _maxLinesError;
+    private Toast _toast = null!;
+
+    protected override void OnParametersSet()
+    {
+        _settings = ConfigRepository.GetSettings();
+        StateHasChanged();
+    }
+
+    private void UpdateCommit(CommitSettings commit)
+    {
+        _settings = _settings with { Commit = commit };
+        StateHasChanged();
+    }
+
+    private void OnMaxLinesChanged(string val)
+    {
+        if (!int.TryParse(val, out var result))
+        {
+            _maxLinesError = "Must be a valid number";
+            return;
+        }
+
+        if (result < CommitSettings.MaxDiffLinesMinimum)
+        {
+            _maxLinesError = $"Max diff lines must be grater or equal {CommitSettings.MaxDiffLinesMinimum} ";
+            return;
+        }
+
+        _maxLinesError = null;
+        UpdateCommit(_settings.Commit with { MaxDiffLines = result });
+    }
+
+    private void CleanUp()
+    {
+        _settings = AppSettings.Default;
+        StateHasChanged();
+    }
+
+    private void Save()
+    {
+        try
+        {
+            ConfigRepository.SaveSettings(_settings);
+            _toast.Show("Commit Settings saved successfully!", false);
+        }
+        catch (Exception ex)
+        {
+            _toast.Show($"Save failed: {ex.Message}", true);
+            CleanUp();
+        }
+    }
+
+}

@@ -1,15 +1,15 @@
 ﻿@inherits LayoutComponentBase
 
-<Panel Border="BoxBorder.Rounded" 
-       BorderColor="Color.Red" 
+<Panel Border="BoxBorder.Rounded"
+       BorderColor="Color.Red"
        Expand>
     <Rows>
-        <ConfigHeader />
+        <ConfigHeader/>
 
-        <Padder Padding="new Padding(0,2)">
+        <Rows>
             @Body
-        </Padder>
-        
-        <ConfigFooter />
+        </Rows>
+
+        <ConfigFooter/>
     </Rows>
 </Panel>

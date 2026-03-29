@@ -22,12 +22,10 @@ async Task StartTuiApp(string initialRoute)
 {
     var builder = Host.CreateApplicationBuilder();
 
-    builder.UseRazorConsole<App>(configure: config =>
-        {
-            config.Services.Configure<ConsoleAppOptions>(opt => { opt.EnableTerminalResizing = true; });
-            config.Services.AddInfrastructure();
-        }
-    );
+    builder.AddTui(services =>
+    {
+        services.AddInfrastructure();
+    });
 
     var host = builder.Build();
 

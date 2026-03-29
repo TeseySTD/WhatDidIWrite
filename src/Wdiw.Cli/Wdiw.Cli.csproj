@@ -6,7 +6,14 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-
+    
+    <ItemGroup>
+        <Content Include="..\Wdiw.Tui\Fonts\**\*">
+            <Link>Fonts\%(RecursiveDir)%(FileName)%(Extension)</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+    
     <ItemGroup>
       <ProjectReference Include="..\Wdiw.Infrastructure\Wdiw.Infrastructure.csproj" />
       <ProjectReference Include="..\Wdiw.Tui\Wdiw.Tui.csproj" />

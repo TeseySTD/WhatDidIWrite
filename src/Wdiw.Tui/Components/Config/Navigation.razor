@@ -1,0 +1,50 @@
+﻿@using RazorConsole.Core.Renderables
+@using Wdiw.Tui.Components.UI
+@implements IDisposable
+@inject NavigationManager Nav
+
+<FlexBox Justify="FlexJustify.SpaceEvenly">
+    @foreach (var item in NavItems)
+    {
+        bool isActive = IsActive(item.Route);
+        
+        <WButton @key="@($"nav-{item.Route}")"
+                 Content="@item.Label"
+                 OnClick="@(() => Nav.NavigateTo(item.Route))"
+                 BackgroundColor="@(isActive ? Color.Maroon : Color.Grey19)"
+                 FocusedColor="Color.Red" />
+    }
+</FlexBox>
+
+@code {
+    private (string Label, string Route)[] NavItems =
+    [
+        ("1. Commit Settings", "config/commit"),
+        ("2. AI Settings", "config/ai"),
+    ];
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool IsActive(string route)
+    {
+        var relativePath = Nav.ToBaseRelativePath(Nav.Uri);
+        
+        if (relativePath == "config" && route == "config/commit") 
+            return true;
+        
+        return relativePath.Equals(route, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= HandleLocationChanged;
+    }
+}

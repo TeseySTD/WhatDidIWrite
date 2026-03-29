@@ -1,6 +1,43 @@
-﻿<Rows>
-    @* Links *@
+﻿@using RazorConsole.Core.Focus
+@using RazorConsole.Components
+@using Spectre.Console
+@implements IDisposable
+@inject FocusManager FocusManager
+
+<Newline/>
+<Columns Expand>
+    <Markup Content="@InstructionContent" Foreground="@Color.Grey37"/>
+
     <Align Horizontal="HorizontalAlignment.Right">
-        <Markup Decoration="Decoration.Underline" Foreground="Color.Blue" Content="Source code" link="https://github.com/TeseySTD/WhatDidIWrite"/>
+        <Markup Decoration="Decoration.Underline"
+                Foreground="Color.DeepSkyBlue1"
+                Content="Source code"
+                link="https://github.com/TeseySTD/WhatDidIWrite"/>
     </Align>
-</Rows>
+</Columns>
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        FocusManager.FocusChanged += OnFocusChanged;
+    }
+
+    private void OnFocusChanged(object? sender, FocusChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool NavBarIsFocused =>
+        FocusManager.CurrentFocusKey != null &&
+        FocusManager.CurrentFocusKey.StartsWith("nav-");
+
+    private string InstructionContent => NavBarIsFocused
+        ? "Use ←/→ to navigate Tabs • Tab to change focus • Enter to select • Type to input • Ctrl+C to exit"
+        : "Tab / Shift+Tab to change focus • Enter to select • Type to input • Ctrl+C to exit";
+
+    public void Dispose()
+    {
+        FocusManager.FocusChanged -= OnFocusChanged;
+    }
+}

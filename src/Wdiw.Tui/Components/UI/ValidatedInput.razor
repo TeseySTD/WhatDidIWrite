@@ -1,0 +1,35 @@
+﻿<Rows>
+    <TextInput Label="@Label"
+               Value="@Value"
+               ValueChanged="@OnValueChanged"
+               Placeholder="@Placeholder"
+               MaskInput="@MaskInput"
+               Expand="true"
+               FocusedBorderColor="@(string.IsNullOrEmpty(ErrorMessage) ? Color.Blue : Color.Red)"/>
+
+    <Padder Padding="new Padding(1, 0, 0, 0)">
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <Markup Content="@($"⚠ {ErrorMessage}")" Foreground="Color.Red" Decoration="Decoration.Italic"/>
+        }
+        else
+        {
+            <Markup Content=" "/> // To prevent jumping when error appears
+        }
+    </Padder>
+</Rows>
+
+@code {
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public string Placeholder { get; set; } = string.Empty;
+    [Parameter] public bool MaskInput { get; set; }
+
+    private async Task OnValueChanged(string newValue)
+    {
+        await ValueChanged.InvokeAsync(newValue);
+    }
+
+}

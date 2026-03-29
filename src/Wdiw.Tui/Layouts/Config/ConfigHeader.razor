@@ -1,7 +1,18 @@
-﻿<Columns>
-    <Figlet Content="WdIw" Color="Color.Red"/>
-    <Align Horizontal="HorizontalAlignment.Center">
-        <Markup Decoration="Decoration.Dim" Content="What Did I Write - AI Commit Tool v1.0"/>
-    </Align>
-</Columns>
+﻿@using System.IO
+@using Wdiw.Tui.Components.Config
 
+<Rows>
+    <Columns>
+        <Figlet Font="@FontPath" Content="WdIw" Color="Color.Red" Justify="Justify.Left"/>
+        <Markup Decoration="Decoration.Dim" Content="What Did I Write - AI Commit Tool v1.0"/>
+    </Columns>
+
+    <Newline/>
+    <Navigation/>
+    <Newline/>
+</Rows>
+
+
+@code {
+    private string FontPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Fonts", "larry3d.flf");
+}

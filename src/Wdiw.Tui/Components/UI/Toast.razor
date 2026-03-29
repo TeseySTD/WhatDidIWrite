@@ -1,0 +1,61 @@
+﻿@using System.Timers
+@implements IDisposable
+
+@if (_isVisible)
+{
+    <div position="absolute" bottom="1" right="2" z-index="100">
+        <Panel Border="BoxBorder.Rounded"
+               BorderColor="@Color"
+               Title="@(_isError ? " Error " : " Success ")"
+               TitleColor="@Color">
+            <Padder Padding="new Padding(1, 0)">
+                <Markup Content="@_message" Foreground="@Color" Decoration="Decoration.Bold"/>
+            </Padder>
+        </Panel>
+    </div>
+}
+
+@code {
+    private bool _isVisible;
+    private string _message = string.Empty;
+    private bool _isError;
+    private Timer? _timer;
+
+    private Color Color => _isError ? Color.Red : Color.Green;
+
+    protected override void OnInitialized()
+    {
+        _timer = new Timer();
+        _timer.AutoReset = false; 
+        _timer.Elapsed += OnTimerElapsed;
+    }
+
+    public void Show(string message, bool isError, double durationMs = 3000)
+    {
+        _message = message;
+        _isError = isError;
+        _isVisible = true;
+
+        _timer?.Stop();
+        _timer!.Interval = durationMs;
+        _timer.Start();
+
+        StateHasChanged();
+    }
+
+    private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+    {
+        _isVisible = false;
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        if (_timer != null)
+        {
+            _timer.Elapsed -= OnTimerElapsed;
+            _timer.Dispose();
+        }
+    }
+}

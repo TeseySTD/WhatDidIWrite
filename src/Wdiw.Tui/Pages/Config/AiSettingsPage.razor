@@ -1,0 +1,85 @@
+﻿@page "/config/ai"
+@layout ConfigLayout
+@using Wdiw.Infrastructure.Abstractions
+@using Wdiw.Infrastructure.Models
+@using Wdiw.Tui.Layouts.Config
+@using Wdiw.Tui.Components.UI
+
+<Rows>
+    <Markup Content="--- AI Provider Configuration ---" Foreground="Color.Grey37"/>
+    <Newline/>
+
+    <Markup Content="Provider:" Foreground="Color.IndianRed"/>
+    <Select TItem="AiProvider"
+            Options="@(Enum.GetValues<AiProvider>())"
+            Value="@_settings.Ai.Provider"
+            ValueChanged="UpdateProvider"
+            OptionForeground="Color.Grey"
+            SelectedOptionForeground="Color.Red3"/>
+
+    <Newline/>
+
+    <ValidatedInput Label="API Key"
+                    Value="@_settings.Ai.ApiKey"
+                    ValueChanged="@(v => _settings = _settings with { Ai = _settings.Ai with { ApiKey = v } })"
+                    Placeholder="sk-..."
+                    MaskInput="true"
+                    ErrorMessage="@(string.IsNullOrEmpty(_settings.Ai.ApiKey) ? "API Key is required for this provider" : null)"/>
+
+    <ValidatedInput Label="Model ID (Optional)"
+                    Value="@_settings.Ai.ModelId"
+                    ValueChanged="@(v => _settings = _settings with { Ai = _settings.Ai with { ModelId = v } })"
+                    Placeholder="@AiSettings.GetDefaultModel(_settings.Ai.Provider)"/>
+
+    <ValidatedInput Label="Custom Endpoint (Optional)"
+                    Value="@_settings.Ai.Endpoint"
+                    ValueChanged="@(v => _settings = _settings with { Ai = _settings.Ai with { Endpoint = v } })"
+                    Placeholder="@_settings.Ai.GetActiveEndpoint()"/>
+
+    <Align Horizontal="HorizontalAlignment.Right">
+        <WButton Content="Save Configuration"
+                    OnClick="Save"
+                    BackgroundColor="Color.Red"
+                    FocusedColor="Color.Maroon"/>
+    </Align>
+    <Toast @ref="_toast"/>
+</Rows>
+
+@code {
+    [Inject] public required IConfigRepository ConfigRepository { get; init; }
+    private AppSettings _settings = AppSettings.Default;
+    private Toast _toast = null!;
+
+    protected override void OnParametersSet()
+    {
+        _settings = ConfigRepository.GetSettings();
+        StateHasChanged();
+    }
+
+    private void UpdateProvider(AiProvider provider)
+    {
+        _settings = _settings with { Ai = _settings.Ai with { Provider = provider } };
+        StateHasChanged();
+    }
+
+    private void CleanUp()
+    {
+        _settings = AppSettings.Default;
+        StateHasChanged();
+    }
+
+    private void Save()
+    {
+        try
+        {
+            ConfigRepository.SaveSettings(_settings);
+            _toast.Show("AI Settings saved successfully!", false);
+        }
+        catch (Exception ex)
+        {
+            _toast.Show($"Save failed: {ex.Message}", true);
+            CleanUp();
+        }
+    }
+
+}
